@@ -1,0 +1,20 @@
+spring:
+  rabbitmq:
+    host: 192.168.188.200
+    port: 5672
+    username: amo
+    password: 123456
+    virtualHost: /
+    listener:
+      simple:
+        default-requeue-rejected: false # 丢弃
+        retry:
+          enabled: true # 开启消费者进行重试
+          max-attempts: 5 # 最大重试次数
+          initial-interval: 3000 # 重试时间间隔
+  elasticsearch:
+    rest:
+      uris: 192.168.188.200:9200
+      connection-timeout: 1s
+      read-timeout: 30s
+

@@ -1,0 +1,9 @@
+server:
+  port: 8080
+
+spring:
+  profiles:
+    active: amo   # 对应自己开发的环境
+  application:
+    name: es-product
+
