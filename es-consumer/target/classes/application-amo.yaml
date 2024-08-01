@@ -18,3 +18,6 @@ spring:
       connection-timeout: 1s
       read-timeout: 30s
 
+# 服务器地址
+es:
+  ip: 192.168.188.200
