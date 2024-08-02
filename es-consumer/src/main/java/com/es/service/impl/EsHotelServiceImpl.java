@@ -3,18 +3,21 @@ package com.es.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.StrUtil;
+import com.alibaba.fastjson2.JSON;
 import com.es.service.EsHotelService;
 import es.entity.dto.HotelDoc;
 import es.entity.param.HotelParam;
 import es.entity.vo.PageResult;
 import org.apache.lucene.search.TotalHits;
+import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.geo.GeoPoint;
-import org.elasticsearch.common.lucene.search.function.FunctionScoreQuery;
 import org.elasticsearch.common.unit.DistanceUnit;
+import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder;
@@ -101,8 +104,18 @@ public class EsHotelServiceImpl implements EsHotelService {
     }
 
     @Override
-    public PageResult filters(HotelParam params) {
-        return null;
+    public boolean saveOrUpdate(HotelDoc hotelDoc) {
+        //更新酒店信息
+        IndexRequest indexRequest = new IndexRequest("hotel");
+        indexRequest.id(hotelDoc.getId().toString()).source(JSON.toJSONString(hotelDoc), XContentType.JSON);
+        try {
+            IndexResponse indexResponse = client.index(indexRequest, RequestOptions.DEFAULT);
+            System.out.println("执行结果:"+indexResponse.getResult());
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+        return true;
     }
 
     /**

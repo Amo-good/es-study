@@ -1,5 +1,6 @@
 package com.es.service;
 
+import es.entity.dto.HotelDoc;
 import es.entity.param.HotelParam;
 import es.entity.vo.PageResult;
 
@@ -10,5 +11,5 @@ public interface EsHotelService {
 
     PageResult list(HotelParam param);
 
-    PageResult filters(HotelParam param);
+    boolean saveOrUpdate(HotelDoc hotelDoc);
 }

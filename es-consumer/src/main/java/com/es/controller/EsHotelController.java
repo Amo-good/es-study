@@ -22,8 +22,4 @@ public class EsHotelController {
         return esHotelService.list(param);
     }
 
-    @PostMapping("/filters")
-    public PageResult filters(@RequestBody HotelParam param){
-        return esHotelService.list(param);
-    }
 }
