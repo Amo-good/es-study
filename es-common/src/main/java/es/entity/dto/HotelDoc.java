@@ -20,6 +20,17 @@ public class HotelDoc {
     private String pic;
     // 排序时的 距离值
     private Object distance;
+    /**
+     * 添加广告标识
+     POST /hotel/_update/id
+     {
+         "doc": {
+             "isAD": true
+         }
+     }
+
+     */
+    private Boolean isAD;
 
     public HotelDoc(Hotel hotel) {
         this.id = hotel.getId();

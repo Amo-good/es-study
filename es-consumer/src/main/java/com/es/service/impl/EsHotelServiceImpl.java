@@ -13,9 +13,12 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.geo.GeoPoint;
+import org.elasticsearch.common.lucene.search.function.FunctionScoreQuery;
 import org.elasticsearch.common.unit.DistanceUnit;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder;
+import org.elasticsearch.index.query.functionscore.ScoreFunctionBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.sort.SortBuilders;
@@ -138,6 +141,40 @@ public class EsHotelServiceImpl implements EsHotelService {
             //价格区间
             boolQuery.filter(QueryBuilders.rangeQuery("price").gte(minPrice).lte(maxPrice));
         }
-        request.source().query(boolQuery);
+        //添加算分函数
+        /**
+         * "query":{
+         *     "function_score":{
+         *         "query":{
+         *             "bool":{.....}
+         *         },
+         *         "functions":[
+         *         {
+         *             "filter":{
+         *                 "term":{
+         *                     "isAD":true
+         *                 }
+         *             },
+         *             "weight":10
+         *         }
+         *         ],
+         *         "boost_mode":"multiply"
+         *     }
+         * }
+         */
+        FunctionScoreQueryBuilder functionScoreQuery =  QueryBuilders.functionScoreQuery(
+                //复合查询，计算相关分数
+                boolQuery,
+                // function score的数组
+                new FunctionScoreQueryBuilder.FilterFunctionBuilder[]{
+                // 其中的一个function score 元素
+                new FunctionScoreQueryBuilder.FilterFunctionBuilder(
+                        // 过滤条件
+                        QueryBuilders.termQuery("isAD", true),
+                        // 算分函数
+                        ScoreFunctionBuilders.weightFactorFunction(10)
+                )
+        });
+        request.source().query(functionScoreQuery);
     }
 }
