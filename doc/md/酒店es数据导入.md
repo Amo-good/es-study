@@ -58,5 +58,88 @@ PUT /hotel
 <b>在es-product中创建查询方法，返回HotelDoc的集合，因为es-consumer不连数据库，所以需要去调用es-product的方法。</b>
 4. 在SpringBootTest中运行批量插入方法（testAddDocument），将数据库的数据批量导入es中
 
+5. 酒店项目，最终的查询
+```bash
+GET /hotel/_search
+{
+  "query": {
+    "function_score": {
+      "query": {
+        "bool": {
+          "must": [
+            {
+              "match": {
+                "name": "深圳"
+              }
+            }
+          ],
+          "filter": [
+            {
+              "term": {
+                "city": "深圳"
+              }
+            },
+            {
+              "term": {
+                "brand": "如家"
+              }
+            },
+            {
+              "term": {
+                "starName": "五钻"
+              }
+            },
+            {
+             "range": {
+               "price": {
+                 "gte": 100,
+                 "lte": 300
+               }
+             }
+            }
+          ]
+        }
+      },
+      "functions": [
+        {
+          "filter": {
+            "term": {
+              "isAD": true
+            }
+          },
+          "weight": 10
+        }
+      ],
+      "boost_mode": "multiply"
+    }
+  },
+  "from": 0,
+  "size": 5,
+  "sort": [
+    {
+      "_geo_distance": {
+        "location": {
+          "lat": 21.5,
+          "lon": 120.93
+        },
+        "order": "asc"
+      }
+    },
+    {
+      "price": "desc"
+    }
+  ],
+  "highlight": {
+    "fields": {
+      "name":{
+        "pre_tags": "<em>",
+        "post_tags": "</em>"
+      }
+    }
+  }
+}
 
+
+
+```
 
