@@ -12,10 +12,14 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.common.geo.GeoPoint;
+import org.elasticsearch.common.unit.DistanceUnit;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.sort.SortBuilders;
+import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -34,7 +38,7 @@ public class EsHotelServiceImpl implements EsHotelService {
     private RestHighLevelClient client;
 
     @Override
-    public PageResult list(HotelParam param) {
+    public PageResult list(HotelParam params) {
         PageResult pageResult = new PageResult();
         //GET /hotel/_search
         SearchRequest request = new SearchRequest("hotel");
@@ -48,7 +52,24 @@ public class EsHotelServiceImpl implements EsHotelService {
          * }
          */
         //复合查询
-       buildBasicQuery(param,request);
+       buildBasicQuery(params,request);
+        //结果集处理
+        //处理分页
+        Integer size = params.getSize();
+        Integer page = params.getPage();
+        request.source().from((page-1)*size);
+        request.source().size(size);
+        //处理排序 （默认、评价score、价格price）
+        String sortBy = params.getSortBy();
+        if (!"default".equals(sortBy)){
+            request.source().sort(sortBy);
+        }
+        //按距离远近排序(只是对结果处理)
+        String location = params.getLocation();
+        if (StrUtil.isNotBlank(location)){
+            request.source().sort(SortBuilders.geoDistanceSort("location",new GeoPoint(location)).order(SortOrder.ASC).unit(DistanceUnit.KILOMETERS));
+        }
+        //结果转化
         try {
             SearchResponse response = client.search(request, RequestOptions.DEFAULT);
             //获取结果集合
@@ -61,6 +82,11 @@ public class EsHotelServiceImpl implements EsHotelService {
                 Map<String, Object> sourceAsMap = searchHit.getSourceAsMap();
                 HotelDoc hotelDoc = new HotelDoc();
                 BeanUtil.fillBeanWithMap(sourceAsMap,hotelDoc ,true);
+                //获取酒店距离
+                Object[] sortValues = searchHit.getSortValues();
+                if (sortValues.length>0){
+                    hotelDoc.setDistance(sortValues[0]);
+                }
                 hotelDocs.add(hotelDoc);
             }
             pageResult.setHotels(hotelDocs);
@@ -107,25 +133,11 @@ public class EsHotelServiceImpl implements EsHotelService {
         }
         //价格区间 must_not
         Double maxPrice = params.getMaxPrice();
-        if (maxPrice!=null){
-            //不大于
-            boolQuery.mustNot(QueryBuilders.rangeQuery("price").gt(maxPrice));
-        }
         Double minPrice = params.getMinPrice();
-        if (minPrice!=null){
-            //不大于
-            boolQuery.mustNot(QueryBuilders.rangeQuery("price").lt(minPrice));
+        if (maxPrice!=null&&minPrice!=null){
+            //价格区间
+            boolQuery.filter(QueryBuilders.rangeQuery("price").gte(minPrice).lte(maxPrice));
         }
         request.source().query(boolQuery);
-        //处理分页
-        Integer size = params.getSize();
-        Integer page = params.getPage();
-        request.source().from((page-1)*size);
-        request.source().size(size);
-        //处理排序 （默认、评价score、价格price）
-        String sortBy = params.getSortBy();
-        if (!"default".equals(sortBy)){
-            request.source().sort(sortBy);
-        }
     }
 }

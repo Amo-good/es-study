@@ -17,4 +17,6 @@ public class HotelParam {
     private Integer page;
     private Integer size;
     private String sortBy;
+    // 我当前的地理坐标
+    private String location;
 }
