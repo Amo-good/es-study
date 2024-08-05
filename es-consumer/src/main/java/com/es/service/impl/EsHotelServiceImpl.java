@@ -1,7 +1,6 @@
 package com.es.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
-import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson2.JSON;
 import com.es.service.EsHotelService;
@@ -9,6 +8,8 @@ import es.entity.dto.HotelDoc;
 import es.entity.param.HotelParam;
 import es.entity.vo.PageResult;
 import org.apache.lucene.search.TotalHits;
+import org.elasticsearch.action.delete.DeleteRequest;
+import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequest;
@@ -111,6 +112,20 @@ public class EsHotelServiceImpl implements EsHotelService {
         try {
             IndexResponse indexResponse = client.index(indexRequest, RequestOptions.DEFAULT);
             System.out.println("执行结果:"+indexResponse.getResult());
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public boolean delete(String id) {
+        DeleteRequest deleteRequest = new DeleteRequest("hotel");
+        deleteRequest.id(id);
+        try {
+            DeleteResponse response = client.delete(deleteRequest, RequestOptions.DEFAULT);
+            System.out.println("执行结果:"+response.getResult());
         } catch (IOException e) {
             e.printStackTrace();
             return false;

@@ -4,7 +4,6 @@ import com.es.service.HotelService;
 import es.entity.Hotel;
 import es.entity.dto.HotelDoc;
 import es.entity.vo.HotelResult;
-import es.entity.vo.PageResult;
 import es.entity.vo.ResultData;
 import org.springframework.web.bind.annotation.*;
 
@@ -47,8 +46,8 @@ public class HotelProductController {
     }
 
 
-    @DeleteMapping
-    public ResultData<String> deleteHotel(@RequestParam Long id){
+    @DeleteMapping("/{id}")
+    public ResultData<String> deleteHotel(@PathVariable("id") Long id){
         return hotelService.deleteHotel(id);
     }
 

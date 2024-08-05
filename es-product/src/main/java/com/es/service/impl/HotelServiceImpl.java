@@ -79,7 +79,12 @@ public class HotelServiceImpl extends ServiceImpl<HotelMapper, Hotel> implements
 
     @Override
     public ResultData<String> deleteHotel(Long id) {
-        return null;
+        boolean flag = removeById(id);
+        if (!flag){
+            return ResultData.fail(ReturnCodeEnum.RC500.getCode(), "删除酒店数据失败！");
+        }
+        rabbitTemplate.convertAndSend("es.hotel","delete",id.toString());
+        return ResultData.success("删除成功");
     }
 
     @Override

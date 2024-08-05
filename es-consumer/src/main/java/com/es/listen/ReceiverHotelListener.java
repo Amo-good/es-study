@@ -36,4 +36,14 @@ public class ReceiverHotelListener {
         boolean flag = esHotelService.saveOrUpdate(hotelDoc);
         log.info("mq处理酒店保存信息结果--------》{}",flag);
     }
+
+    //监听来自hotel的消息
+    @RabbitListener(queues = "hotel.delete")
+    public void deleteHotelListener(@NotNull Message message, Channel channel) throws JsonProcessingException {
+        String id = new String(message.getBody(), StandardCharsets.UTF_8);
+        log.info("mq接收到酒店删除信息,id为--------》{}",id);
+        //保存商品信息到es中
+        boolean flag = esHotelService.delete(id);
+        log.info("mq处理酒店保存信息结果--------》{}",flag);
+    }
 }
