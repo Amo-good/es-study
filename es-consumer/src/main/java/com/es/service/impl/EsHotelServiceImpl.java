@@ -30,6 +30,9 @@ import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
+import org.elasticsearch.search.suggest.SuggestBuilder;
+import org.elasticsearch.search.suggest.SuggestBuilders;
+import org.elasticsearch.search.suggest.completion.CompletionSuggestion;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -64,6 +67,30 @@ public class EsHotelServiceImpl implements EsHotelService {
             result.put("brand", getBucketKeyList(aggregations,"brandAgg"));
             result.put("city", getBucketKeyList(aggregations,"cityAgg"));
             result.put("starName", getBucketKeyList(aggregations,"starNameAgg"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    @Override
+    public List<String> suggestion(String prefix) {
+        List<String> result = new ArrayList<>();
+        //自动补齐功能
+        SearchRequest request = new SearchRequest("hotel");
+        //跳过重复的
+        request.source().suggest(new SuggestBuilder().addSuggestion(
+                "suggestions",
+                SuggestBuilders.completionSuggestion("suggestion").text(prefix).skipDuplicates(true).size(10)
+        ));
+        try {
+            SearchResponse response = client.search(request, RequestOptions.DEFAULT);
+            CompletionSuggestion completionSuggestion=response.getSuggest().getSuggestion("suggestions");
+            for (CompletionSuggestion.Entry.Option option : completionSuggestion.getOptions()) {
+                //获取自动补全的值
+                String text = option.getText().toString();
+                result.add(text);
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }

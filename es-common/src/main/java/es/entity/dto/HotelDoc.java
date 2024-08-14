@@ -4,6 +4,11 @@ import es.entity.Hotel;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 @Data
 @NoArgsConstructor
 public class HotelDoc {
@@ -31,6 +36,8 @@ public class HotelDoc {
 
      */
     private Boolean isAD;
+    //自动补全的词条
+    private List<String> suggestion;
 
     public HotelDoc(Hotel hotel) {
         this.id = hotel.getId();
@@ -44,5 +51,14 @@ public class HotelDoc {
         this.business = hotel.getBusiness();
         this.location = hotel.getLatitude() + ", " + hotel.getLongitude();
         this.pic = hotel.getPic();
+        //品牌、商圈（商圈可能由/组成"business" : "三里屯/工体/东直门地区"）
+        if (this.business.contains("/")){
+            String[] arr = business.split("/");
+            this.suggestion = new ArrayList<>();
+            this.suggestion.add(this.brand);
+            Collections.addAll(this.suggestion,arr);
+        }else{
+            this.suggestion = Arrays.asList(this.brand,this.business);
+        }
     }
 }

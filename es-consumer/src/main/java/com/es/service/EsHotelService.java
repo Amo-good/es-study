@@ -19,4 +19,6 @@ public interface EsHotelService {
     boolean delete(String id);
 
     Map<String, List<String>> filters(HotelParam param);
+
+    List<String> suggestion(String prefix);
 }

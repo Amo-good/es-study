@@ -143,3 +143,117 @@ GET /hotel/_search
 
 ```
 
+6. 添加拼音分词器
+> 修改新的酒店索引
+```bash
+# 先删除原来的索引
+DELETE /hotel
+# 酒店数据索引库
+PUT /hotel
+{
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "text_anlyzer": {
+          "tokenizer": "ik_max_word",
+          "filter": "py"
+        },
+        "completion_analyzer": {
+          "tokenizer": "keyword",
+          "filter": "py"
+        }
+      },
+      "filter": {
+        "py": {
+          "type": "pinyin",
+          "keep_full_pinyin": false,
+          "keep_joined_full_pinyin": true,
+          "keep_original": true,
+          "limit_first_letter_length": 16,
+          "remove_duplicated_term": true,
+          "none_chinese_pinyin_tokenize": false
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "id":{
+        "type": "keyword"
+      },
+      "name":{
+        "type": "text",
+        "analyzer": "text_anlyzer",
+        "search_analyzer": "ik_smart",
+        "copy_to": "all"
+      },
+      "address":{
+        "type": "keyword",
+        "index": false
+      },
+      "price":{
+        "type": "integer"
+      },
+      "score":{
+        "type": "integer"
+      },
+      "brand":{
+        "type": "keyword",
+        "copy_to": "all"
+      },
+      "city":{
+        "type": "keyword"
+      },
+      "starName":{
+        "type": "keyword"
+      },
+      "business":{
+        "type": "keyword",
+        "copy_to": "all"
+      },
+      "location":{
+        "type": "geo_point"
+      },
+      "pic":{
+        "type": "keyword",
+        "index": false
+      },
+      "all":{
+        "type": "text",
+        "analyzer": "text_anlyzer",
+        "search_analyzer": "ik_smart"
+      },
+      "suggestion":{
+          "type": "completion",
+          "analyzer": "completion_analyzer"
+      }
+    }
+  }
+}
+```
+> 修改酒店HotelDoc的构造方法
+
+我们需要加入自动补齐的词条到`suggestion`字段中去,我们把商圈和品牌列入自动补齐中
+
+> 重新导入酒店的数据
+运行`testAddDocument`的方法
+
+> 自动补齐的语法如下
+
+```bash
+# 自动补全查询
+POST /hotel/_search
+{
+  "suggest": {
+    "suggestions": {
+      "text": "s", 
+      "completion": {
+        "field": "suggestion", 
+        "skip_duplicates": true, 
+        "size": 10 
+      }
+    }
+  }
+}
+
+```

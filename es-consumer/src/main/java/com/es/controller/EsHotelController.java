@@ -29,4 +29,12 @@ public class EsHotelController {
     public Map<String, List<String>> filters(@RequestBody HotelParam param){
         return esHotelService.filters(param);
     }
+
+    /**
+     * 输入框自动补齐功能
+     */
+    @GetMapping("/suggestion")
+    public List<String> suggestion(@RequestParam("key") String prefix){
+        return esHotelService.suggestion(prefix);
+    }
 }

@@ -20,7 +20,7 @@ public class HotelService {
 
     //获取酒店的数据
     public List<HotelDoc> getHotelList(){
-        String url="http://localhost:8088/hotel/listDoc";
+        String url="http://localhost:8888/hotel/listDoc";
         ResponseEntity<List<HotelDoc>> responseEntity = restTemplate.exchange(url, HttpMethod.GET, null, new ParameterizedTypeReference<List<HotelDoc>>() {});
         return responseEntity.getBody();
     }
