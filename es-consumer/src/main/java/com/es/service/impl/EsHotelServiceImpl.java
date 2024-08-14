@@ -25,6 +25,9 @@ import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder;
 import org.elasticsearch.index.query.functionscore.ScoreFunctionBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.Aggregations;
+import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.stereotype.Service;
@@ -32,8 +35,10 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author amo
@@ -43,6 +48,45 @@ public class EsHotelServiceImpl implements EsHotelService {
 
     @Resource
     private RestHighLevelClient client;
+
+    @Override
+    public Map<String, List<String>> filters(HotelParam param) {
+        //条件筛选也需要根据当前的输入框的值筛选
+        Map<String,List<String>> result = new HashMap<>();
+        SearchRequest request = new SearchRequest("hotel");
+        //查询一致
+        buildBasicQuery(param,request);
+        //聚合操作
+        buildAggregation(request);
+        try {
+            SearchResponse response = client.search(request, RequestOptions.DEFAULT);
+            Aggregations aggregations = response.getAggregations();
+            result.put("brand", getBucketKeyList(aggregations,"brandAgg"));
+            result.put("city", getBucketKeyList(aggregations,"cityAgg"));
+            result.put("starName", getBucketKeyList(aggregations,"starNameAgg"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    private List<String> getBucketKeyList(Aggregations aggregations,String name) {
+        Terms brandTerm = aggregations.get(name);
+        List<? extends Terms.Bucket> buckets = brandTerm.getBuckets();
+        return buckets.stream().map(bucket -> bucket.getKey().toString()).collect(Collectors.toList());
+    }
+
+
+    private void buildAggregation(SearchRequest request) {
+        //品牌聚合
+        request.source().aggregation(AggregationBuilders.terms("brandAgg").field("brand").size(10));
+        //城市
+        request.source().aggregation(AggregationBuilders.terms("cityAgg").field("city").size(10));
+        //星级
+        request.source().aggregation(AggregationBuilders.terms("starNameAgg").field("starName").size(10));
+        //不需要查询文档
+        request.source().size(0);
+    }
 
     @Override
     public PageResult list(HotelParam params) {
